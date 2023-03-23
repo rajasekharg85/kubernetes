@@ -1,0 +1,87 @@
+version: "3.9"
+networks:
+  roboshop:
+    driver: bridge
+volumes:
+# This is equivalent to docker volume create [volume-name]. these are named volumes
+  mysql:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/ec2-user/mysql
+  redis:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/ec2-user/redis
+  rabbitmq:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/ec2-user/rabbitmq
+  mongodb:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/ec2-user/mongodb
+      
+services:
+  web:
+    image: rajasekharg85/web:v1
+    container_name: web
+    ports:
+    - "80:80"
+    depends_on:
+    - catalogue
+    - user
+    - cart
+    - mysql
+    - shipping
+  mongodb:
+    image: rajasekharg85/mongodb:v1
+    container_name: mongodb
+  catalogue:
+    image: rajasekharg85/catalogue:v1
+    container_name: catalogue
+    depends_on:
+    - mongodb
+  redis:
+    image: redis
+    container_name: redis
+  user:
+    image: rajasekharg85/user:v1
+    container_name: user
+    depends_on:
+    - mongodb
+    - redis
+  cart:
+    image: rajasekharg85/cart:v1
+    container_name: cart
+    depends_on:
+    - redis
+    - catalogue
+  mysql:
+    image: rajasekharg85/mysql:v1
+    container_name: mysql
+  shipping:
+    image: rajasekharg85/shipping:v1
+    container_name: shipping
+    depends_on:
+      - mysql
+  rabbitmq:
+    image: rabbitmq
+    container_name: rabbitmq
+  payment:
+    image: rajasekharg85/payment:v1
+    container_name: payment
+    depends_on:
+      - rabbitmq
+  ratings:
+    image: rajasekharg85/ratings:v1
+    container_name: ratings
+    depends_on:
+      - mysql
